@@ -2,9 +2,9 @@
 // === CSP — РАБОЧИЙ ДЛЯ ЯНДЕКС.КАРТ 2.1 (full.js) ===
 header("Content-Security-Policy: ".
     "default-src 'self'; ".
-    "script-src 'self' https://api-maps.yandex.ru https://*.yastatic.net https://*.yandex.net 'unsafe-inline' 'unsafe-eval' blob:; ".
-    "script-src-elem 'self' https://api-maps.yandex.ru https://*.yastatic.net https://*.yandex.net 'unsafe-inline' blob:; ".
-    "connect-src 'self' https://api-maps.yandex.ru https://*.yastatic.net https://*.yandex.net https://*.maps.yandex.net https://core-renderer-tiles.maps.yandex.net; ".
+    "script-src 'self' https://api-maps.yandex.ru https://yastatic.net https://*.yastatic.net https://*.yandex.net 'unsafe-inline' 'unsafe-eval' blob:; ".
+    "script-src-elem 'self' https://api-maps.yandex.ru https://yastatic.net https://*.yastatic.net https://*.yandex.net 'unsafe-inline' blob:; ".
+    "connect-src 'self' https://api-maps.yandex.ru https://yastatic.net https://*.yastatic.net https://*.yandex.net https://*.maps.yandex.net https://core-renderer-tiles.maps.yandex.net; ".
     "img-src 'self' data: blob: https://*.yandex.net https://*.yastatic.net https://core-renderer-tiles.maps.yandex.net; ".
     "style-src 'self' 'unsafe-inline' https://*.yastatic.net; ".
     "worker-src blob:"
