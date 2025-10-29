@@ -1,7 +1,0 @@
-# Обязательный CSP для загрузки Яндекс.Карт 2.1 (full.js и вспомогательные домены)
-Header set Content-Security-Policy "default-src 'self'; script-src 'self' https://api-maps.yandex.ru https://*.yastatic.net https://*.yandex.net 'unsafe-inline' 'unsafe-eval' blob:; script-src-elem 'self' https://api-maps.yandex.ru https://*.yastatic.net https://*.yandex.net 'unsafe-inline' blob:; connect-src 'self' https://api-maps.yandex.ru https://*.yastatic.net https://*.yandex.net https://*.maps.yandex.net https://core-renderer-tiles.maps.yandex.net; img-src 'self' data: blob: https://*.yandex.net https://*.yastatic.net https://core-renderer-tiles.maps.yandex.net; style-src 'self' 'unsafe-inline' https://*.yastatic.net; worker-src blob:"
-
-# Правильный MIME для GeoJSON, иначе fetch() может вернуть text/plain
-AddType application/json .geojson
-
-Options -Indexes
