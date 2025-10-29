@@ -1,0 +1,24 @@
+<!doctype html><meta charset="utf-8"><title>TT diag</title>
+<style>body{font:14px system-ui;background:#0f1115;color:#e6eaf2;padding:16px}code{color:#9ae6b4}</style>
+<h1>Trans-Time /map диагностика</h1><div id="log"></div>
+<script>
+const log=(m,ok)=>{const d=document.createElement('div');d.innerHTML=(ok?'✅ ':'❌ ')+m;document.getElementById('log').appendChild(d);};
+(async()=>{
+  log('URL: <code>'+location.href+'</code>', true);
+  try{
+    await new Promise((res,rej)=>{const s=document.createElement('script');
+      s.src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&apikey=317aa42d-aa15-4acf-885a-6d6bfddb2339&suggest_apikey=317aa42d-aa15-4acf-885a-6d6bfddb2339";
+      s.onload=res; s.onerror=()=>rej(new Error('script load error')); document.head.appendChild(s);});
+    log('Загрузился loader Яндекс API', true);
+  }catch(e){ log('Яндекс API не загрузился: '+e, false); return; }
+  try{ await new Promise(res=>ymaps.ready(res)); log('ymaps.ready() ок', true);}
+  catch(e){ log('ymaps.ready() не отработал: '+e, false); return; }
+  try{ new ymaps.Map(document.createElement('div'),{center:[55.75,37.62],zoom:8}); log('Map init ок', true); }
+  catch(e){ log('Map init упал (обычно CSP/eval): '+e, false); return; }
+  try{
+    const r=await fetch('/map/data/frames_ready.geojson?v='+Date.now(),{cache:'no-store'});
+    log('GET /map/data/frames_ready.geojson → '+r.status, r.ok);
+    if(r.ok){ const j=await r.json(); log('JSON parse ок, features: '+(Array.isArray(j.features)?j.features.length:'n/a'), true); }
+  }catch(e){ log('GeoJSON ошибка: '+e, false); }
+})();
+</script>
