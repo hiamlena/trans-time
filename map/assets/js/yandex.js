@@ -13,6 +13,51 @@ let vehicleRadios = [];
 let smartRegistry = new Map();
 let currentVehicle = 'car';
 
+function markYandexState(state) {
+  if (!state) {
+    delete window.__TT_YA_LOADING__;
+  } else {
+    window.__TT_YA_LOADING__ = state;
+  }
+}
+
+function applyCspNonce(node) {
+  if (!node || node.nonce) return;
+  const current = document.currentScript?.nonce;
+  if (current) {
+    node.setAttribute('nonce', current);
+    return;
+  }
+  const declared = document.querySelector('meta[name="csp-nonce"]')?.content
+    || document.querySelector('meta[name="cspNonce"]')?.content;
+  if (declared) {
+    node.setAttribute('nonce', declared);
+    return;
+  }
+  const anyScript = document.querySelector('script[nonce]');
+  if (anyScript?.nonce || anyScript?.getAttribute?.('nonce')) {
+    const nonce = anyScript.nonce || anyScript.getAttribute('nonce');
+    if (nonce) node.setAttribute('nonce', nonce);
+  }
+}
+
+function describeBundleAdvice(msg) {
+  if (!msg) return null;
+  if (/Failed to bundle/i.test(msg) || /ChunkLoadError/i.test(msg)) {
+    return 'Похоже, модуль Yandex не собрался — убери лишние load= пакеты или переключись на API v3.0.';
+  }
+  if (/Content Security Policy/i.test(msg) || /Refused to load the script/i.test(msg)) {
+    return 'CSP блокирует скрипт. Добавь https://api-maps.yandex.ru и https://yastatic.net в script-src/script-src-elem.';
+  }
+  if (/Failed to fetch/i.test(msg) || /NetworkError/i.test(msg)) {
+    return 'Сеть недоступна или домен заблокирован прокси/фаерволом.';
+  }
+  if (/invalid key/i.test(msg) || /apikey/i.test(msg)) {
+    return 'Проверь API-ключ Яндекс: он может быть просрочен или отсутствует доступ к JS API.';
+  }
+  return null;
+}
+
 function describeYmapsError(err) {
   if (!err) return 'неизвестная ошибка';
   if (typeof err === 'string') return err;
@@ -133,16 +178,18 @@ export function init() {
 
   // Защитимся от повторной инициализации
   if (window.__TT_YA_LOADING__) return;
-  window.__TT_YA_LOADING__ = true;
+  markYandexState('loading');
 
   const script = document.createElement('script');
   script.src = `https://api-maps.yandex.ru/2.1/?apikey=${encodeURIComponent(cfg.apiKey)}&lang=${encodeURIComponent(cfg.lang || 'ru_RU')}&load=package.standard,package.search,multiRouter.MultiRoute,package.geoObjects`;
   script.async = true;
   script.defer = true;
+  applyCspNonce(script);
   script.onload = () => {
     if (!window.ymaps || typeof ymaps.ready !== 'function') {
       console.error('[TT] Yandex API: ymaps отсутствует после загрузки');
       toast('Yandex API не инициализировался');
+      markYandexState(null);
       return;
     }
 
@@ -151,20 +198,30 @@ export function init() {
       settled = true;
       try {
         setup();
+        markYandexState('ready');
       } catch (err) {
         console.error('[TT] Yandex setup error', err);
         toast('Ошибка инициализации карты: ' + describeYmapsError(err));
+        markYandexState(null);
       }
     };
     const onReadyError = (err) => {
       settled = true;
       const msg = describeYmapsError(err);
       console.error('[TT] Yandex ready error', err);
+      const advice = describeBundleAdvice(msg);
+      let toastMessage;
       if (msg.includes('Failed to bundle')) {
-        toast('Yandex API: не удалось собрать модули (проверь параметр load, напр. package.standard)');
+        toastMessage = 'Yandex API: не удалось собрать модули (проверь параметр load, напр. package.standard)';
       } else {
-        toast('Yandex API не готов: ' + msg);
+        toastMessage = 'Yandex API не готов: ' + msg;
       }
+      if (advice) {
+        toastMessage += `<div class="small">${escapeHtml(advice)}</div>`;
+        console.info('[TT advise]', advice);
+      }
+      toast(toastMessage);
+      markYandexState(null);
     };
 
     try {
@@ -177,12 +234,21 @@ export function init() {
       if (!settled) {
         console.warn('[TT] Yandex ready timeout');
         toast('Yandex API не отвечает — проверь интернет и CSP (script-src)');
+        markYandexState(null);
       }
     }, 8000);
   };
   script.onerror = (event) => {
     console.error('[TT] Yandex script load error', event);
-    toast('Не удалось загрузить Yandex Maps — проверь интернет или CSP (script-src)');
+    const detail = describeBundleAdvice(event?.message || event?.error?.message);
+    let toastMessage = 'Не удалось загрузить Yandex Maps — проверь интернет или CSP (script-src)';
+    if (detail) {
+      toastMessage += `<div class="small">${escapeHtml(detail)}</div>`;
+      console.info('[TT advise]', detail);
+    }
+    toast(toastMessage);
+    markYandexState(null);
+    script.remove();
   };
   document.head.appendChild(script);
 }
