@@ -1,54 +1,69 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Trans-Time — Маршрут (Leaflet)</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Trans-Time — Маршрут (Yandex)</title>
 
-  <!-- Leaflet CSS (CDN) -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-    crossorigin=""
-  />
-
-  <!-- Наши стили (внешний файл, без inline) -->
-  <link rel="stylesheet" href="./assets/css/map-leaflet.css?v=1.0.0" />
+  <link rel="stylesheet" href="./assets/css/style.css?v=1.0.2" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" href="/assets/logo-tt.png" />
+  <link rel="shortcut icon" href="/assets/logo-tt.png" />
+  <link rel="apple-touch-icon" href="/assets/logo-tt.png" />
 </head>
 <body>
-  <!-- Боковая панель -->
-  <div id="sidebar" class="sidebar">
-    <h3>Trans-Time • Маршрут (без Яндекс)</h3>
-    <p>Клик по карте ➜ добавить via-точку</p>
-    <p>Альтернативы доступны — выбери в списке</p>
+  <div id="app">
+    <header>
+      <div class="bar">
+        <div class="brand">Trans-Time • Маршрут (Yandex)</div>
+        <div class="small">Клик по карте → добавить via-точку</div>
+        <div></div>
+        <div class="small right">Альтернативы доступны — выберите в списке</div>
 
-    <label for="from">Откуда:</label>
-    <input type="text" id="from" placeholder="Адрес отправления" />
+        <div class="field">
+          <span>Откуда</span>
+          <input id="from" type="text" placeholder="Адрес, населённый пункт" />
+        </div>
+        <div class="field">
+          <span>Куда</span>
+          <input id="to" type="text" placeholder="Адрес, населённый пункт" />
+        </div>
 
-    <label for="to">Куда:</label>
-    <input type="text" id="to" placeholder="Адрес назначения" />
+        <div class="row2">
+          <div id="vehicleGroup" class="veh-group">
+            <label class="pill active"
+              ><input type="radio" name="veh" value="car" checked /><span>Легковой</span></label
+            >
+            <label class="pill"
+              ><input type="radio" name="veh" value="truck40" /><span>Грузовой ≤ 40 т</span></label
+            >
+            <label class="pill"
+              ><input type="radio" name="veh" value="truckHeavy" /><span>Грузовой &gt; 40 т</span></label
+            >
+          </div>
+          <div class="actions">
+            <button id="buildBtn" class="btn">Построить маршрут</button>
+            <button id="clearVia" class="btn secondary">Сбросить via-точки</button>
+          </div>
+        </div>
+      </div>
+    </header>
 
-    <button id="buildBtn" class="btn">Построить маршрут</button>
-
-    <div class="route-option">
-      <label><input type="radio" id="active" name="route" checked /> Маршрут (активный)</label>
-      <label><input type="radio" id="alt" name="route" /> Альтернативы</label>
-      <label><input type="radio" id="weights" name="route" /> Весовые рамки</label>
+    <div class="mapWrap">
+      <div id="map"></div>
+      <div class="legend">
+        <div class="dot dot-route"></div><span class="small">Маршрут</span>
+        <div class="dot dot-alt"></div><span class="small">Альтернативы</span>
+        <div class="dot dot-frames"></div><span class="small">Весовые рамки</span>
+      </div>
+      <div id="routeList" class="routeList"></div>
     </div>
   </div>
 
-  <!-- Контейнер карты -->
-  <div id="map" class="map"></div>
+  <div id="toast" class="toast"></div>
 
-  <!-- Leaflet JS (CDN) -->
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""
-  ></script>
-
-  <!-- Наш JS (внешний файл, без inline) -->
-  <script type="module" src="./assets/js/map-leaflet.js?v=1.0.0"></script>
+  <script src="config.js?v=1.0.1"></script>
+  <script type="module" src="./errors.js?v=1.0.0"></script>
+  <script type="module" src="./assets/js/app.js?v=1.0.2"></script>
 </body>
 </html>

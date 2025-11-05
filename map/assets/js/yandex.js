@@ -13,6 +13,18 @@ let vehicleRadios = [];
 let smartRegistry = new Map();
 let currentVehicle = 'car';
 
+function describeYmapsError(err) {
+  if (!err) return 'неизвестная ошибка';
+  if (typeof err === 'string') return err;
+  if (err.message && err.name) return `${err.name}: ${err.message}`;
+  if (err.message) return err.message;
+  try {
+    return JSON.stringify(err);
+  } catch (e) {
+    return String(err);
+  }
+}
+
 const TOOLTIP_TEXT = {
   route: 'Укажите пункты A и B',
   clearVia: 'Нет промежуточных точек для сброса',
@@ -125,8 +137,53 @@ export function init() {
 
   const script = document.createElement('script');
   script.src = `https://api-maps.yandex.ru/2.1/?apikey=${encodeURIComponent(cfg.apiKey)}&lang=${encodeURIComponent(cfg.lang || 'ru_RU')}&load=package.standard,package.search,multiRouter.MultiRoute,package.geoObjects`;
-  script.onload = () => (window.ymaps ? ymaps.ready(setup) : toast('Yandex API не инициализировался'));
-  script.onerror = () => toast('Не удалось загрузить Yandex Maps');
+  script.async = true;
+  script.defer = true;
+  script.onload = () => {
+    if (!window.ymaps || typeof ymaps.ready !== 'function') {
+      console.error('[TT] Yandex API: ymaps отсутствует после загрузки');
+      toast('Yandex API не инициализировался');
+      return;
+    }
+
+    let settled = false;
+    const onReady = () => {
+      settled = true;
+      try {
+        setup();
+      } catch (err) {
+        console.error('[TT] Yandex setup error', err);
+        toast('Ошибка инициализации карты: ' + describeYmapsError(err));
+      }
+    };
+    const onReadyError = (err) => {
+      settled = true;
+      const msg = describeYmapsError(err);
+      console.error('[TT] Yandex ready error', err);
+      if (msg.includes('Failed to bundle')) {
+        toast('Yandex API: не удалось собрать модули (проверь параметр load, напр. package.standard)');
+      } else {
+        toast('Yandex API не готов: ' + msg);
+      }
+    };
+
+    try {
+      ymaps.ready(onReady, onReadyError);
+    } catch (err) {
+      onReadyError(err);
+    }
+
+    setTimeout(() => {
+      if (!settled) {
+        console.warn('[TT] Yandex ready timeout');
+        toast('Yandex API не отвечает — проверь интернет и CSP (script-src)');
+      }
+    }, 8000);
+  };
+  script.onerror = (event) => {
+    console.error('[TT] Yandex script load error', event);
+    toast('Не удалось загрузить Yandex Maps — проверь интернет или CSP (script-src)');
+  };
   document.head.appendChild(script);
 }
 
